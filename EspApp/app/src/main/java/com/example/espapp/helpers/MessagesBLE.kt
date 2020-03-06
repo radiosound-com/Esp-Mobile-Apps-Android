@@ -29,8 +29,6 @@ object MessagesBLE {
      * 81 Logging
      * 98 Restart (reset the ESP32)
      * 99 Standby (enter in deep sleep)
-     *
-     * // TODO: see it! please remove that you not use and keep it updated
      **/
 
     // Messages code
@@ -42,6 +40,8 @@ object MessagesBLE {
     const val CODE_ECHO = 70
     const val CODE_LOGGING = 71
     const val CODE_FEEDBACK = 80
+    const val CODE_CLEAR_URL = 90
+    const val CODE_SET_URL = 91
     const val CODE_RESTART = 98
     const val CODE_STANDBY = 99
 
@@ -54,6 +54,8 @@ object MessagesBLE {
     val MESSAGE_ECHO = "${FormatterUtil.number(CODE_ECHO, "00")}:"
     val MESSAGE_LOGGING = "${FormatterUtil.number(CODE_LOGGING, "00")}:"
     val MESSAGE_FEEDBACK = "${FormatterUtil.number(CODE_FEEDBACK, "00")}:"
+    val MESSAGE_CLEAR_URL = "${FormatterUtil.number(CODE_CLEAR_URL, "00")}:"
+    val MESSAGE_SET_URL = "${FormatterUtil.number(CODE_SET_URL, "00")}:"
     val MESSAGE_RESTART = "${FormatterUtil.number(CODE_RESTART, "00")}:"
     val MESSAGE_STANDBY = "${FormatterUtil.number(CODE_STANDBY, "00")}:"
 

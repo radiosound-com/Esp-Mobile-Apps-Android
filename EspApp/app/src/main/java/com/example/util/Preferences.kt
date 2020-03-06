@@ -12,14 +12,14 @@ package com.example.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import com.example.util.Util.causeError
 
 /////// Preferences
 
 object Preferences {
 
-    private lateinit var sharedPreferences: SharedPreferences
+    lateinit var sharedPreferences: SharedPreferences
     private var isInitialized: Boolean = false
 
     /////// Methods

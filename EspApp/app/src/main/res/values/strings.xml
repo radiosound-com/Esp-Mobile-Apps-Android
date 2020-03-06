@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--BLUETOOTH-->
-    <string name="bt_not_avaliable">Bluetooth is not available, shutting down!</string>
+    <string name="bt_not_available">Bluetooth is not available, shutting down!</string>
     <string name="bt_not_enabled">Bluetooth has not been enabled, shutting down!</string>
     <string name="ble_device_not_have">his device does not have Bluetooth Low Energy, shutting down!</string>
     <string name="bt_turn_on_gps">GPS is off. \nFor recent versions of Android, \nthis needs to be connected to\nsearching for BlueTooth devices.\nThe application will be terminated!\nPlease enable GPS and run again. This is necessary to be done only once.</string>
@@ -83,7 +83,12 @@
     <string name="ext_info">Info</string>
     <string name="ext_echo">Echo</string>
     <string name="ext_feedback">Feedback</string>
+    <string name="ext_set_url" translatable="false">OTA signal sent to ESP32</string>
+    <string name="ext_clear_url" translatable="false">OTA URL has been removed from ESP32</string>
     <string name="ext_standby">Standby</string>
     <string name="ext_invalid">Invalid</string>
+    <string name="url_app_link" translatable="false">Failed to handle URL App Linking</string>
+    <!-- Preference Titles -->
+    <string name="setting_device_name" translatable="false">Search for device names starting with</string>
 
 </resources>

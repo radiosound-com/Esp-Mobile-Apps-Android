@@ -1,0 +1,31 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+font-size: xx-large;
+text-align: center;
+font-family: sans-serif;
+}
+a { display: block; text-align: center; padding: 1em; border: 2px solid #66ccff; border-radius: 1em; }
+
+</style>
+</head>
+<body>
+<a href="EspApp.apk">Install EspApp.apk</a><br>
+or point your phone's QR code scanner here:<br>
+<script type="text/javascript">
+<!--
+// Swap out / or /index.html for /EspApp.apk for the QR code
+// then point an Android QR code scanner at the screen, and bob's your uncle
+
+var apkurl = location.href;
+if (location.href.indexOf("index.html") === -1)
+    apkurl = apkurl + "EspApp.apk";
+else
+    apkurl = apkurl.replace('index.html', 'EspApp.apk');
+document.write("<img src='https://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(apkurl) + "'>");
+// -->
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        android:defaultValue="bleenky"
+        android:key="device_name"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/setting_device_name" />
+
+</PreferenceScreen>

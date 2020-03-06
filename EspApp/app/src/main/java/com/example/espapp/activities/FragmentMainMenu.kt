@@ -11,11 +11,13 @@
 package com.example.espapp.activities
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
+import android.widget.ImageButton
+import android.widget.Toast
 import android.widget.ListView
 
 import com.example.espapp.R
@@ -25,6 +27,9 @@ import com.example.espapp.models.app.MenuOption
 import com.example.util.extentions.UI.extSetHeightBasedOnChildren
 import com.example.util.extentions.extShowToast
 import com.example.util.logV
+
+import kotlinx.android.synthetic.*
+import kotlinx.android.synthetic.main.fragment_mainmenu.*
 
 class FragmentMainMenu : Fragment() {
 
@@ -80,24 +85,6 @@ class FragmentMainMenu : Fragment() {
         super.onStop()
 
         logV("")
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-
-        logV("")
-
-        try {
-            val childFragmentManager = Fragment::class.java.getDeclaredField("mChildFragmentManager")
-            childFragmentManager.isAccessible = true
-            childFragmentManager.set(this, null)
-
-        } catch (e: NoSuchFieldException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        }
-
     }
 
     // Show the main menu
@@ -242,17 +229,32 @@ class FragmentMainMenu : Fragment() {
             this.menuOptions.add(optTerminal)
         }
 
+//        // ESP32 LED Toggle Button
+//
+//        if (AppSettings.TOGGLE_LED) {
+//
+//            val optToggleLED = MenuOption()
+//
+//            optToggleLED.code = "TOGGLE"
+//            optToggleLED.name = getString(R.string.mainmenu_toggle_name)
+//            optToggleLED.description = getString(R.string.mainmenu_toggle_desc)
+//            optToggleLED.drawableImagem = R.drawable.toggle_led
+//            optToggleLED.enabled = true
+//
+//            this.menuOptions.add(optToggleLED)
+//        }
+
         // AppSettings - remove it if you not need this
 
-        val optSettings = MenuOption()
-
-        optSettings.code = "SETTINGS"
-        optSettings.name = getString(R.string.mainmenu_sett_name)
-        optSettings.description = getString(R.string.mainmenu_sett_desc)
-        optSettings.drawableImagem = R.drawable.settings
-        optSettings.enabled = false
-
-        this.menuOptions.add(optSettings)
+//        val optSettings = MenuOption()
+//
+//        optSettings.code = "SETTINGS"
+//        optSettings.name = getString(R.string.mainmenu_sett_name)
+//        optSettings.description = getString(R.string.mainmenu_sett_desc)
+//        optSettings.drawableImagem = R.drawable.settings
+//        optSettings.enabled = false
+//
+//        this.menuOptions.add(optSettings)
 
     }
 }

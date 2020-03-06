@@ -1,0 +1,255 @@
+# This file is a template, and might need editing before it works on your project.
+# Auto DevOps
+# This CI/CD configuration provides a standard pipeline for
+# * building a Docker image (using a buildpack if necessary),
+# * storing the image in the container registry,
+# * running tests from a buildpack,
+# * running code quality analysis,
+# * creating a review app for each topic branch,
+# * and continuous deployment to production
+#
+# Test jobs may be disabled by setting environment variables:
+# * test: TEST_DISABLED
+# * code_quality: CODE_QUALITY_DISABLED
+# * license_management: LICENSE_MANAGEMENT_DISABLED
+# * performance: PERFORMANCE_DISABLED
+# * sast: SAST_DISABLED
+# * dependency_scanning: DEPENDENCY_SCANNING_DISABLED
+# * container_scanning: CONTAINER_SCANNING_DISABLED
+# * dast: DAST_DISABLED
+# * review: REVIEW_DISABLED
+# * stop_review: REVIEW_DISABLED
+#
+# In order to deploy, you must have a Kubernetes cluster configured either
+# via a project integration, or via group/project variables.
+# KUBE_INGRESS_BASE_DOMAIN must also be set on the cluster settings,
+# as a variable at the group or project level, or manually added below.
+#
+# Continuous deployment to production is enabled by default.
+# If you want to deploy to staging first, set STAGING_ENABLED environment variable.
+# If you want to enable incremental rollout, either manual or time based,
+# set INCREMENTAL_ROLLOUT_MODE environment variable to "manual" or "timed".
+# If you want to use canary deployments, set CANARY_ENABLED environment variable.
+#
+# If Auto DevOps fails to detect the proper buildpack, or if you want to
+# specify a custom buildpack, set a project variable `BUILDPACK_URL` to the
+# repository URL of the buildpack.
+# e.g. BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-ruby.git#v142
+# If you need multiple buildpacks, add a file to your project called
+# `.buildpacks` that contains the URLs, one on each line, in order.
+# Note: Auto CI does not work with multiple buildpacks yet
+
+image: alpine:latest
+
+variables:
+  # KUBE_INGRESS_BASE_DOMAIN is the application deployment domain and should be set as a variable at the group or project level.
+  # KUBE_INGRESS_BASE_DOMAIN: domain.example.com
+
+  POSTGRES_USER: user
+  POSTGRES_PASSWORD: testing-password
+  POSTGRES_ENABLED: "false"
+  POSTGRES_DB: $CI_ENVIRONMENT_SLUG
+  POSTGRES_VERSION: 9.6.2
+
+  DOCKER_DRIVER: overlay2
+
+  ROLLOUT_RESOURCE_TYPE: deployment
+
+  DOCKER_TLS_CERTDIR: ""  # https://gitlab.com/gitlab-org/gitlab-runner/issues/4501
+
+stages:
+  - android-build
+  - local-deploy
+  - build # docker image
+  - test
+  - review
+  - dast
+  - staging
+  - canary
+  - production
+  - incremental rollout 10%
+  - incremental rollout 25%
+  - incremental rollout 50%
+  - incremental rollout 100%
+  - performance
+  - cleanup
+
+.build_template: &build_common
+  image: jangrewe/gitlab-ci-android
+  stage: android-build
+  script: |
+    if [ ! -f ~/.android/debug.keystore ]; then
+      # Using the debug keystore for the demo
+      # Running in docker image or for the first time on a dedicated runner
+      # If this is a dedicated shell runner, you can generate the key yourself:
+      # keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000
+      # Otherwise, generate one, base64 encode, and copy to your GitLab CI/CD settings as DEBUG_KEYSTORE
+
+      # Get the keys from the environment and write them
+      if [ -z "$DEBUG_KEYSTORE" ]; then
+        echo "Can't build a deployable app without key!"
+        echo "Need DEBUG_KEYSTORE variable defined for code signing so that the runners can use a known key."
+        echo "On a machine where you've got ~/.android/debug.keystore:"
+        echo "echo -n ~/.android/debug.keystore | base64"
+        echo "Go to GitLab settings -\> CI/CD -\> Variables"
+        echo "Add base64 encoded contents of debug.keystore to the DEBUG_KEYSTORE variable"
+        exit 1
+      fi
+      echo -n "$DEBUG_KEYSTORE" | base64 --decode > ~/.android/debug.keystore
+    fi
+    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+    cd EspApp
+    export GRADLE_USER_HOME=$(pwd)/.gradle
+    chmod +x ./gradlew
+    ./gradlew assembleDebug
+  artifacts:
+    paths:
+    - EspApp/app/build/outputs/apk/debug/app-debug.apk
+  cache:
+    key: ${CI_PROJECT_ID}
+    paths:
+    - EspApp/app/build/
+    - EspApp/.gradle/
+
+build master:
+  <<: *build_common
+  only:
+    - master
+  environment:
+    name: build/master
+    on_stop: build master remove
+
+build review:
+  <<: *build_common
+  only:
+    - branches
+  except:
+    - master
+  environment:
+    name: build/review/$CI_COMMIT_REF_NAME
+    on_stop: build review remove
+
+.build_stop_template: &build_stop_env
+  stage: cleanup
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  allow_failure: true
+  script:
+    - echo "Nothing to see here"
+
+build review remove:
+  <<: *build_stop_env
+  environment:
+    name: build/review/$CI_COMMIT_REF_NAME
+    action: stop
+  only:
+    - branches
+  except:
+    - master
+
+build master remove:
+  <<: *build_stop_env
+  environment:
+    name: build/master
+    action: stop
+  only:
+    - master
+
+.local_deploy_template: &local_deploy_common
+  stage: local-deploy
+  image: jangrewe/gitlab-ci-android
+
+  # Set up your local network runner with this tag
+  tags:
+    - android-deploy
+
+  # If devices are solely dedicated to testing this app, it can speed up review cycles by commenting out when: manual
+  # Otherwise, the deployment script as-is can be disruptive to a device that's being used for something else--e.g. take out the monkey command
+  when: manual
+  script: |
+    if [ ! -f ~/.android/adbkey.pub ]; then
+      # Running in docker image or for the first time on a dedicated runner
+      # If this is a dedicated shell runner, you can generate the keys yourself:
+      # adb keygen ~/.android/adbkey
+      # Otherwise,
+      # Get the keys from the environment and write them
+      if [ -z "$ADBKEY_PUB" ] || [ -z "$ADBKEY_PRIV" ] || [ -z "$DEBUG_KEYSTORE" ]; then
+        echo "Can't deploy without keys!"
+        echo "Need ADBKEY_PUB, ADBKEY_PRIV, and DEBUG_KEYSTORE variables defined for local deployment."
+        echo "On a machine where you've run adb previously, look in ~/.android/ for the keys"
+        echo "Or run a command to generate them: adb keygen adbkey"
+        echo "Go to GitLab settings -\> CI/CD -\> Variables"
+        echo "Add the contents of adbkey.pub to the ADBKEY_PUB variable"
+        echo "Add the contents of adbkey to the ADBKEY_PRIV variable"
+        echo "Add base64 encoded contents of debug.keystore to the DEBUG_KEYSTORE variable"
+        exit 1
+      fi
+      echo "$ADBKEY_PRIV" > ~/.android/adbkey
+      echo "$ADBKEY_PUB" > ~/.android/adbkey.pub
+      echo -n "$DEBUG_KEYSTORE" | base64 --decode > ~/.android/debug.keystore
+    fi
+    keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+    if [ -z "$ANDROID_SERIAL" ]; then
+      echo "Need a device IP address. Did you define ANDROID_SERIAL in this job?"
+      echo "Check .gitlab-ci.yml and GitLab settings -\> CI/CD -\> Variables"
+      exit 1
+    fi
+    # Find adb or put it in path
+    if [ ! -x $(command -v adb) ] && [ -x /sdk/platform-tools/adb ]; then
+      export PATH=/sdk/platform-tools:$PATH
+    fi
+    if [ ! -x $(command -v adb) ] && [ -x ~/Library/Android/sdk/platform-tools/adb ]; then
+      export PATH=~/Library/Android/sdk/platform-tools:$PATH
+    fi
+    if [ ! -x $(command -v adb) ]; then
+      echo "Couldn't find adb. Is it installed on this machine?"
+      echo "If this is a Docker runner, check that the image still has adb at /sdk/platform-tools"
+      exit 1
+    fi
+    # Connect to the device
+    adb connect $ANDROID_SERIAL
+    check1=$(adb devices | grep $ANDROID_SERIAL | grep device)
+    if [ -z "$check1" ]; then
+      adb disconnect $ANDROID_SERIAL
+      adb connect $ANDROID_SERIAL
+      check2=$(adb devices | grep $ANDROID_SERIAL | grep device)
+      if [ -z "$check1" ]; then
+        echo "The device isn't running adb wireless. Connect via USB and run adb tcpip 5555"
+        exit 1
+      fi
+    fi
+    adb -s $ANDROID_SERIAL install -r -d -t EspApp/app/build/outputs/apk/debug/app-debug.apk
+    adb -s $ANDROID_SERIAL shell pm grant com.example.espapp android.permission.ACCESS_COARSE_LOCATION # so you don't have to tap allow for the location permission
+    adb -s $ANDROID_SERIAL shell monkey -p com.example.espapp -v 1
+
+local deploy z3:
+  <<: *local_deploy_common
+  variables:
+    ANDROID_SERIAL: $ANDROID_IP_Z3:5555
+  environment:
+    name: Z3
+
+local deploy g3:
+  <<: *local_deploy_common
+  when: manual
+  variables:
+    ANDROID_SERIAL: $ANDROID_IP_G3:5555
+  environment:
+    name: G3
+
+# This is using the GitLab Auto DevOps template for the rest of the build.
+# TODO: Fastlane deploy to Play Store
+
+include:
+  - template: Jobs/Build.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Build.gitlab-ci.yml
+  - template: Jobs/Test.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Test.gitlab-ci.yml
+  - template: Jobs/Code-Quality.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Code-Quality.gitlab-ci.yml
+  - template: Jobs/Deploy.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Deploy.gitlab-ci.yml
+  - template: Jobs/DAST-Default-Branch-Deploy.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/DAST-Default-Branch-Deploy.gitlab-ci.yml
+  - template: Jobs/Browser-Performance-Testing.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Jobs/Browser-Performance-Testing.gitlab-ci.yml
+  - template: Security/DAST.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Security/DAST.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Security/Container-Scanning.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Management.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Security/License-Management.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml  # https://gitlab.com/gitlab-org/gitlab-foss/blob/master/lib/gitlab/ci/templates/Security/SAST.gitlab-ci.yml

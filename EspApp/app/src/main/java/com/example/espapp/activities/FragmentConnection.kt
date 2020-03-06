@@ -12,9 +12,9 @@ package com.example.espapp.activities
 
 
 import android.graphics.drawable.Drawable
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -96,22 +96,6 @@ class FragmentConnection : Fragment() {
     //    public void onAttach(Context context) {
     //        super.onAttach(getContext());
     //    }
-
-    override fun onDetach() {
-        super.onDetach()
-
-        try {
-            val childFragmentManager = Fragment::class.java.getDeclaredField("mChildFragmentManager")
-            childFragmentManager.isAccessible = true
-            childFragmentManager.set(this, null)
-
-        } catch (e: NoSuchFieldException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        }
-
-    }
 
     fun showConnecting(scanning: Boolean) {
 

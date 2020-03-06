@@ -10,6 +10,7 @@
 
 package com.example.espapp.helpers
 
+import androidx.preference.PreferenceManager
 import com.example.espapp.BuildConfig
 import com.example.util.Preferences
 
@@ -21,15 +22,17 @@ object AppSettings {
 
     // -- BLE
 
-    const val BT_NAME_DEVICE = "Esp32_Device"       // Device name (start)
-
     const val BT_TIMEOUT = 3                        // Timeout
 
     // - Time & timeouts (in seconds)
 
     const val TIME_SEND_FEEDBACK  = 30              // Send feedbacks at this interval - put 0 to disable this
 
-    const val TIME_MAX_INACTITIVY = 300             // Maximum time of inactivity
+    const val TIME_MAX_INACTIVITY = 300             // Maximum time of inactivity
+
+    // - Toggle LED
+
+    val TOGGLE_LED: Boolean = BuildConfig.DEBUG
 
     // - Terminal BLE
 

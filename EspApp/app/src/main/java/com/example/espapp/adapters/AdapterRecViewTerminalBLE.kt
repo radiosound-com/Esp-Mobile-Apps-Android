@@ -11,7 +11,7 @@
 package com.example.espapp.adapters
 
 import android.graphics.Color
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 
 import android.view.View

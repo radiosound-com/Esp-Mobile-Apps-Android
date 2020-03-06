@@ -19,21 +19,16 @@ import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
+import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v4.content.LocalBroadcastManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.util.*
 
 import java.io.UnsupportedEncodingException
@@ -46,8 +41,7 @@ import com.example.util.extentions.extShowToast
 /////// Class BLE
 
 class BLE constructor (activity: Activity,
-                       deviceName: String,
-                       strBTNotAvaliable: String,
+                       strBTNotAvailable: String,
                        strDeviceHasDisconnected: String,
                        strNotPossibleConnDevice: String,
                        strBLEUartServiceNotActive: String,
@@ -111,7 +105,7 @@ class BLE constructor (activity: Activity,
 
     ///// Privates
 
-    private var deviceName: String                              // Inicio do name do device, o endereco deste serￃﾡ colocado no final
+    lateinit var deviceName: String                              // Inicio do name do device, o endereco deste serￃﾡ colocado no final
     private lateinit var adapter: BluetoothAdapter              // Adaptador BT
 
     private var bufferLine = StringBuffer()                     // Buffer for receive line
@@ -154,12 +148,11 @@ class BLE constructor (activity: Activity,
         // Initialize
 
         this.activity = activity
-        this.deviceName = deviceName
         this.bleUtilHandler = bleHandler
 
         // Strings
 
-        this.strBTNotAvaliable = strBTNotAvaliable
+        this.strBTNotAvaliable = strBTNotAvailable
         this.strBLEUartServiceNotActive = strBLEUartServiceNotActive
         this.strDeviceNotHaveBLE = strDeviceNotHaveBLE
         this.strNotPossibleStartUARTBLEService = strNotPossibleStartUARTBLEService
@@ -219,10 +212,11 @@ class BLE constructor (activity: Activity,
         this.deviceConnected = Util.isEmulator // If you are an emulator consider connected
         this.handlerTimeoutConnection = null
 
+        // Name of devices we should look for (prefix)
+        this.deviceName = Preferences.read("device_name", "bleenky").toString()
+
         // Last connected device
-
         this.lastAddrConnected = Preferences.read("BT_ADDR", null)
-
     }
 
     private fun verifyPermissions() {
@@ -406,7 +400,7 @@ class BLE constructor (activity: Activity,
                         // Callback to abort connection
 
                         if (bleUtilHandler != null) {
-                            bleUtilHandler!!.onAbortConnection(strBTNotAvaliable)
+                            bleUtilHandler!!.onAbortConnection(strBTNotAvailable)
                         }
 
                     }
@@ -1243,7 +1237,7 @@ class BLE constructor (activity: Activity,
     // BLE Scanner - TODO: make new Android method
 
     private val bleScanCallback = BluetoothAdapter.LeScanCallback { device, rssi, _ ->
-        if (device.name != null && device.name.startsWith(deviceName)) {
+        if (device.name != null && device.name.startsWith(this.deviceName)) {
 
             if (debugExtra) {
                 logD("btScanCallback: finded: ${device.name} rssi: $rssi")

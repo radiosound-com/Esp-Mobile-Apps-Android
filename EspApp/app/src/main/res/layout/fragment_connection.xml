@@ -1,5 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -48,9 +49,16 @@
             android:text="@string/connection_bluetooth"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#FFFFFF" />
-        </LinearLayout>
 
-        <LinearLayout
+    </LinearLayout>
+
+    <fragment
+        android:id="@+id/settings_fragment"
+        android:name="com.example.espapp.activities.SettingsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
             android:id="@+id/layoutConnConnecting"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

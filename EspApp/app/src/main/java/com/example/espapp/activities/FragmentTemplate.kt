@@ -12,7 +12,7 @@ package com.example.espapp.activities
 
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,22 +48,6 @@ class FragmentTemplate : Fragment() {
         // Views
 
         return rootView
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-
-        try {
-            val childFragmentManager = Fragment::class.java.getDeclaredField("mChildFragmentManager")
-            childFragmentManager.isAccessible = true
-            childFragmentManager.set(this, null)
-
-        } catch (e: NoSuchFieldException) {
-            throw RuntimeException(e)
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException(e)
-        }
-
     }
 
     override fun onResume() {

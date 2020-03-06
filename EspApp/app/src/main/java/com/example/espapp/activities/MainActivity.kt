@@ -21,12 +21,14 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.app.FragmentActivity
-import android.support.v4.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.core.content.ContextCompat
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -44,7 +46,7 @@ import java.util.*
 
 ////// MainActivity
 
-class MainActivity : FragmentActivity() {
+class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     //////// Companion (static)
 
@@ -209,6 +211,9 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
 
         // ****** Initialize
+        val appLinkIntent = intent
+        val appLinkAction = appLinkIntent.action
+        val appLinkData = appLinkIntent.data
 
         // USB connected ?
 
@@ -269,7 +274,7 @@ class MainActivity : FragmentActivity() {
         val handler = Handler()
         handler.postDelayed({
             // Initialize App
-            initializeApp()
+            initializeApp(intent)
         }, 1000)
 
     }
@@ -293,6 +298,7 @@ class MainActivity : FragmentActivity() {
 //            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 //        }
+        Preferences.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
     }
 
     // On pause
@@ -301,6 +307,7 @@ class MainActivity : FragmentActivity() {
     public override fun onPause() {
         super.onPause()
         logD("--- onPause")
+        Preferences.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     // On stop
@@ -311,6 +318,15 @@ class MainActivity : FragmentActivity() {
         logD("--- onStop")
 
     }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        if (key == "device_name") {
+            ble.deviceName = sharedPreferences.getString(key, "bleenky").toString()
+            logD("Preference value was updated to: " + ble.deviceName)
+        }
+    }
+
+
 
     // Save instance
 
@@ -370,7 +386,8 @@ class MainActivity : FragmentActivity() {
 
     // Treat return of Bluetooth activation request or other
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
         try {
 
@@ -443,7 +460,7 @@ class MainActivity : FragmentActivity() {
 
     // Initialize App
 
-    private fun initializeApp() {
+    private fun initializeApp(intent: Intent) {
 
         try {
 
@@ -493,8 +510,7 @@ class MainActivity : FragmentActivity() {
                 // Instance the BLE class
 
                 ble = BLE(this,
-                        AppSettings.BT_NAME_DEVICE,
-                        getString(R.string.bt_not_avaliable),
+                        getString(R.string.bt_not_available),
                         getString(R.string.bt_device_has_disconnected),
                         getString(R.string.bt_device_not_connected),
                         getString(R.string.ble_uart_service_not_active),
@@ -569,7 +585,7 @@ class MainActivity : FragmentActivity() {
 
                                 // Received line (message)
 
-                                bleReceiveLine(line)
+                                bleReceiveLine(line, intent)
 
                             }
                         })
@@ -710,6 +726,7 @@ class MainActivity : FragmentActivity() {
 
             if (::ble.isInitialized) {
                 ble.finalize()
+                handleIntent(intent)
             }
 
         } catch (e: Exception) {
@@ -1032,7 +1049,7 @@ class MainActivity : FragmentActivity() {
 
     // Received Bluetooth data (line)
 
-    private fun bleReceiveLine(line: String) {
+    private fun bleReceiveLine(line: String, intent: Intent) {
 
         // Debug
 
@@ -1077,13 +1094,13 @@ class MainActivity : FragmentActivity() {
 
         // Process the received message
 
-        bleProcessMessageRecv(line)
+        bleProcessMessageRecv(line, intent)
 
     }
 
     // Process the received message
 
-    private fun bleProcessMessageRecv(message: String) {
+    private fun bleProcessMessageRecv(message: String, intent: Intent) {
 
         @Suppress("NAME_SHADOWING")
         var message = message
@@ -1094,7 +1111,7 @@ class MainActivity : FragmentActivity() {
 
             // Valid ?
 
-            if (message.length < 3) {
+            if (message.length < 2) {
 
                 this.extShowToast(getString(R.string.receive_wrong_message))
 
@@ -1147,7 +1164,7 @@ class MainActivity : FragmentActivity() {
 
                     // Processes the return
 
-                    bleProcessInitial(fields)
+                    bleProcessInitial(fields, intent)
                 }
 
                 MessagesBLE.CODE_ENERGY // Power status: extern (USB, etc.) or battery
@@ -1215,6 +1232,20 @@ class MainActivity : FragmentActivity() {
 
                 }
 
+                MessagesBLE.CODE_SET_URL // Set the OTA URL on the ESP32
+                -> {
+                    if (AppSettings.TERMINAL_BLE && bleDebugEnabled) { // App have a Terminal BLE (debug) and it is enabled ?
+                        bleUpdateDebug( getString(R.string.ext_set_url))
+                    }
+                }
+
+                MessagesBLE.CODE_CLEAR_URL // Set the OTA URL on the ESP32
+                -> {
+                    if (AppSettings.TERMINAL_BLE && bleDebugEnabled) { // App have a Terminal BLE (debug) and it is enabled ?
+                        bleUpdateDebug( getString(R.string.ext_clear_url))
+                    }
+                }
+
                 MessagesBLE.CODE_STANDBY // Device have entered standby
                 -> {
 
@@ -1248,7 +1279,7 @@ class MainActivity : FragmentActivity() {
 
     // Process initial message
 
-    private fun bleProcessInitial(fields: Fields) {
+    private fun bleProcessInitial(fields: Fields, intent: Intent) {
 
         // Note: this is a example how this app discovery device hardware
         // This usefull to works with versions or models of hardware
@@ -1281,6 +1312,7 @@ class MainActivity : FragmentActivity() {
         exibirSubTitle()
 
         this.extShowToast(getString(R.string.device_connected_version) + " " + versionDevice)
+        handleIntent(intent)
 
     }
 
@@ -1547,7 +1579,7 @@ class MainActivity : FragmentActivity() {
 
         sendFeedback = false
 
-        timeActive = AppSettings.TIME_MAX_INACTITIVY
+        timeActive = AppSettings.TIME_MAX_INACTIVITY
 
         bleDebugs = mutableListOf()
 
@@ -1682,13 +1714,13 @@ class MainActivity : FragmentActivity() {
 
                     // Abort connection
 
-                    bleAbortConnection(getString(R.string.reached_maximum_time_inactivity, AppSettings.TIME_MAX_INACTITIVY))
+                    bleAbortConnection(getString(R.string.reached_maximum_time_inactivity, AppSettings.TIME_MAX_INACTIVITY))
                     return
                 }
 
             } else { // For other fragments - set as active
 
-                timeActive = AppSettings.TIME_MAX_INACTITIVY
+                timeActive = AppSettings.TIME_MAX_INACTIVITY
 
             }
 
@@ -1910,6 +1942,22 @@ class MainActivity : FragmentActivity() {
             textViewTitle!!.text = titulo
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val appLinkAction = intent.action
+        val appLinkData: Uri? = intent.data
+        if (Intent.ACTION_VIEW == appLinkAction) {
+            appLinkData?.authority?.also { urlAddress ->
+                var sendURL = (MessagesBLE.MESSAGE_SET_URL + urlAddress)
+                this.extShowToast("Message to be sent: $sendURL")
+                bleSendMessage(sendURL, false)
+            }
+        }
+    }
 }
 
 ///// Fim

@@ -13,7 +13,7 @@ package com.example.util.extentions.UI
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.PorterDuff
-import android.support.annotation.LayoutRes
+import androidx.annotation.LayoutRes
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View

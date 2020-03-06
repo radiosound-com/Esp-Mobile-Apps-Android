@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--BLUETOOTH-->
-    <string name="bt_not_avaliable">Bluetooth não disponível, encerrando oapp!</string>
+    <string name="bt_not_available">Bluetooth não disponível, encerrando oapp!</string>
     <string name="bt_not_enabled">Bluetooth não foi habilitado. encerrando o app!.</string>
     <string name="ble_device_not_have">Este dispositivo não possui Bluetooth Low Energy, encerrando o app!</string>
     <string name="bt_turn_on_gps">O GPS está desligado.\nPara as versões pacote do Android,\nisto necessita ser ligado para \na procura por dispositivos BlueTooth.\nO Aplicativo será encerrado!\nFavor habilitar o GPS e executar novamente. Isto é necessário ser feito somente uma vez</string>
