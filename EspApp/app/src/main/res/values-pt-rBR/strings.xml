@@ -50,6 +50,8 @@
     <string name="mainmenu_info_desc">Exibe informações sobre o dispositivo ESP32 conectado</string>
     <string name="mainmenu_term_name">Terminal BLE</string>
     <string name="mainmenu_term_desc">Terminal para ver ou enviar mensagens BLE</string>
+    <string name="mainmenu_toggle_name">Toggle LED</string>
+    <string name="mainmenu_toggle_desc">Toggles ESP32\'s UI LED On or Off</string>
     <string name="mainmenu_sett_name">Settings</string>
     <string name="mainmenu_sett_desc">Exibe as configurações deste App</string>
     <string name="main_menu_title">EspApp</string>

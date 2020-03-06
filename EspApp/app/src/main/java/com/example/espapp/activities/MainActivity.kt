@@ -146,6 +146,8 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
 
     var bleDebugEnabled: Boolean = false                            // Enabled ?
 
+    var stateOfLED: Boolean = true
+
     private var bleStatusActive = 0                                 // Status of BLE is active ?
 
     private var bleWaitingResponse = false                          // Waiting for response ?
@@ -1200,6 +1202,20 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
 
                 }
 
+                MessagesBLE.CODE_LEDOFF // Debug - LED On
+                -> {
+                    if (AppSettings.TERMINAL_BLE && bleDebugEnabled) { // App have a Terminal BLE (debug) and it is enabled ?
+                        bleUpdateDebug( getString(R.string.ext_ledoff))
+                    }
+                 }
+
+                MessagesBLE.CODE_LEDON // Debug - LED Off
+                -> {
+                    if (AppSettings.TERMINAL_BLE && bleDebugEnabled) { // App have a Terminal BLE (debug) and it is enabled ?
+                        bleUpdateDebug( getString(R.string.ext_ledon))
+                    }
+                }
+
                 MessagesBLE.CODE_ECHO // Debug - echo
                 -> {
 
@@ -1940,6 +1956,21 @@ class MainActivity : FragmentActivity(), SharedPreferences.OnSharedPreferenceCha
 
         if (textViewTitle != null)
             textViewTitle!!.text = titulo
+    }
+
+    fun led_button_clicked(view: View) {
+//        Toast.makeText(this@MainActivity, "LED Button Pressed", Toast.LENGTH_SHORT).show() // Debug to verify funciton called
+
+        if (stateOfLED) {
+            bleSendMessage(MessagesBLE.MESSAGE_LEDOFF, false)
+//            findViewById<ImageButton>(R.id.toggle_LED_button)
+            findViewById<ImageButton>(R.id.toggle_LED_button).setImageResource(R.drawable.led_off)
+            stateOfLED = !stateOfLED
+        } else {
+            bleSendMessage(MessagesBLE.MESSAGE_LEDON, false)
+            findViewById<ImageButton>(R.id.toggle_LED_button).setImageResource(R.drawable.green_led_on)
+            stateOfLED = !stateOfLED
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

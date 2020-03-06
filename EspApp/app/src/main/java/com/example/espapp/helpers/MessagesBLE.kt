@@ -24,6 +24,8 @@ object MessagesBLE {
      * 01 Initial
      * 10 Energy status(External or Battery?)
      * 11 Informations about ESP32 device
+     * 50 Turns LED off
+     * 51 Turns LED on
      * 70 Echo bleDebug
      * 80 Feedback
      * 81 Logging
@@ -37,6 +39,8 @@ object MessagesBLE {
     const val CODE_INITIAL = 1
     const val CODE_ENERGY = 10
     const val CODE_INFO = 11
+    const val CODE_LEDOFF = 50
+    const val CODE_LEDON = 51
     const val CODE_ECHO = 70
     const val CODE_LOGGING = 71
     const val CODE_FEEDBACK = 80
@@ -51,6 +55,8 @@ object MessagesBLE {
     val MESSAGE_INITIAL = "${FormatterUtil.number(CODE_INITIAL, "00")}:"
     val MESSAGE_INFO = "${FormatterUtil.number(CODE_INFO, "00")}:"
     val MESSAGE_ENERGY = "${FormatterUtil.number(CODE_ENERGY, "00")}:"
+    val MESSAGE_LEDOFF = "${FormatterUtil.number(CODE_LEDOFF, "00")}:"
+    val MESSAGE_LEDON = "${FormatterUtil.number(CODE_LEDON, "00")}:"
     val MESSAGE_ECHO = "${FormatterUtil.number(CODE_ECHO, "00")}:"
     val MESSAGE_LOGGING = "${FormatterUtil.number(CODE_LOGGING, "00")}:"
     val MESSAGE_FEEDBACK = "${FormatterUtil.number(CODE_FEEDBACK, "00")}:"

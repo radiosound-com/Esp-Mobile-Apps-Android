@@ -21,4 +21,20 @@
 
     </ListView>
 
+    <TextView
+        android:id="@+id/toggle_LED_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/toggle_esp32_s_ui_led"
+        android:textAlignment="center" />
+
+    <ImageButton
+        android:id="@+id/toggle_LED_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#ffffff"
+        android:contentDescription="TODO"
+        android:onClick="led_button_clicked"
+        android:src="@drawable/toggle_led" />
+
 </LinearLayout>

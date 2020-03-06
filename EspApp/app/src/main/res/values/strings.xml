@@ -50,6 +50,8 @@
     <string name="mainmenu_info_desc">Show informations about ESP32 device connected</string>
     <string name="mainmenu_term_name">Terminal BLE</string>
     <string name="mainmenu_term_desc">Terminal to send or see message BLE</string>
+    <string name="mainmenu_toggle_name">Toggle LED</string>
+    <string name="mainmenu_toggle_desc">Toggles ESP32\'s UI LED On or Off</string>
     <string name="mainmenu_sett_name">Settings</string>
     <string name="mainmenu_sett_desc">Show settings of this App</string>
     <string name="main_menu_title">EspApp</string>
@@ -81,12 +83,15 @@
     <string name="ext_initial">Initial</string>
     <string name="ext_energy">Energy</string>
     <string name="ext_info">Info</string>
+    <string name="ext_ledon" translatable="false">LED On</string>
+    <string name="ext_ledoff" translatable="false">LED Off</string>
     <string name="ext_echo">Echo</string>
     <string name="ext_feedback">Feedback</string>
     <string name="ext_set_url" translatable="false">OTA signal sent to ESP32</string>
     <string name="ext_clear_url" translatable="false">OTA URL has been removed from ESP32</string>
     <string name="ext_standby">Standby</string>
     <string name="ext_invalid">Invalid</string>
+    <string name="toggle_esp32_s_ui_led" translatable="false">Toggle ESP32\'s UI LED</string>
     <string name="url_app_link" translatable="false">Failed to handle URL App Linking</string>
     <!-- Preference Titles -->
     <string name="setting_device_name" translatable="false">Search for device names starting with</string>
